@@ -14,6 +14,7 @@ import com.simon.budgetapp.ui.auth.RegisterScreen
 import com.simon.budgetapp.ui.recurring.RecurringScreen
 import com.simon.budgetapp.ui.sharing.SharingScreen
 import com.simon.budgetapp.ui.auth.SplashScreen
+import com.simon.budgetapp.ui.categorydetail.CategoryDetailScreen
 
 
 @Composable
@@ -74,7 +75,8 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() },
                 onNavigateToStats = { id -> navController.navigate(Screen.Stats.createRoute(id)) },
                 onNavigateToRecurring = { id -> navController.navigate(Screen.Recurring.createRoute(id)) },
-                onNavigateToSharing = { id -> navController.navigate(Screen.Sharing.createRoute(id)) }
+                onNavigateToSharing = { id -> navController.navigate(Screen.Sharing.createRoute(id)) },
+                onNavigateToCategoryDetail = { id -> navController.navigate(Screen.CategoryDetail.createRoute(id)) }
             )
         }
         composable(
@@ -83,6 +85,16 @@ fun AppNavigation() {
         ) { backStackEntry ->
             val budgetId = backStackEntry.arguments?.getInt("budgetId") ?: 0
             StatsScreen(
+                budgetId = budgetId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.CategoryDetail.route,
+            arguments = listOf(navArgument("budgetId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val budgetId = backStackEntry.arguments?.getInt("budgetId") ?: 0
+            CategoryDetailScreen(
                 budgetId = budgetId,
                 onBack = { navController.popBackStack() }
             )

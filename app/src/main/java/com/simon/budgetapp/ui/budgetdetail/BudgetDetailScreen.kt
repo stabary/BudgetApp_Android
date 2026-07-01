@@ -42,8 +42,8 @@ fun BudgetDetailScreen(
     onNavigateToStats: (Int) -> Unit,
     onNavigateToRecurring: (Int) -> Unit,
     onNavigateToSharing: (Int) -> Unit,
+    onNavigateToCategoryDetail: (Int) -> Unit,   // <-- nouveau
     viewModel: BudgetDetailViewModel = viewModel()
-
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
@@ -108,7 +108,10 @@ fun BudgetDetailScreen(
                     val isTablet = maxWidth > 600.dp
 
                     val monthlyCard: @Composable () -> Unit = {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        Card(
+                            onClick = { onNavigateToCategoryDetail(budgetId) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
                                     text = "Solde du mois : ${"%.2f".format(monthly.balance)} €",

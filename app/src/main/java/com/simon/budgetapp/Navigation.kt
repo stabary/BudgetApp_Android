@@ -9,6 +9,9 @@ sealed class Screen(val route: String) {
     object Stats : Screen("stats/{budgetId}") {
         fun createRoute(budgetId: Int) = "stats/$budgetId"
     }
+    object CategoryDetail : Screen("category_detail/{budgetId}") {
+        fun createRoute(budgetId: Int) = "category_detail/$budgetId"
+    }
     object Register : Screen("register")
     object Recurring : Screen("recurring/{budgetId}") {
         fun createRoute(budgetId: Int) = "recurring/$budgetId"
