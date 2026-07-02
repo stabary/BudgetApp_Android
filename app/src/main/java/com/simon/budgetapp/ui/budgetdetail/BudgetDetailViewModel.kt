@@ -135,6 +135,44 @@ class BudgetDetailViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    fun addRecurringTransaction(
+        budgetId: Int,
+        categoryId: Int?,
+        label: String,
+        amount: Double,
+        type: String,
+        frequency: String,
+        dayOfMonth: Int?,
+        startDate: String,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val token = sessionManager.tokenFlow.first() ?: return@launch
+                val response = api.createRecurringRule(
+                    "Bearer $token",
+                    budgetId,
+                    CreateRecurringRuleRequest(
+                        category_id = categoryId,
+                        label = label,
+                        amount = amount,
+                        type = type,
+                        frequency = frequency,
+                        day_of_month = dayOfMonth,
+                        start_date = startDate
+                    )
+                )
+                if (response.isSuccessful) {
+                    loadData(budgetId) // recharge tout (transactions + à venir) après création
+                    onSuccess()
+                } else {
+                    errorMessage = "Impossible de créer la routine"
+                }
+            } catch (e: Exception) {
+                errorMessage = "Erreur réseau : ${e.message}"
+            }
+        }
+    }
 
     fun updateTransaction(
         transactionId: Int,
@@ -225,8 +263,5 @@ class BudgetDetailViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
-
-
-
 
 }

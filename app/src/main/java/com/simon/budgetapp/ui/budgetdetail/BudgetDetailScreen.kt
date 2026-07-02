@@ -316,9 +316,20 @@ fun BudgetDetailScreen(
         AddTransactionDialog(
             categories = viewModel.categories,
             onDismiss = { showAddDialog = false },
-            onConfirm = { categoryId, type, amount, label, date ->
-                viewModel.addTransaction(budgetId, categoryId, type, amount, label, date) {
-                    showAddDialog = false
+            onConfirm = { categoryId, type, amount, label, date, frequency ->
+                if (frequency == "none") {
+                    viewModel.addTransaction(budgetId, categoryId, type, amount, label, date) {
+                        showAddDialog = false
+                    }
+                } else {
+                    val dayOfMonth = if (frequency == "monthly") {
+                        date.split("-").lastOrNull()?.toIntOrNull()
+                    } else null
+                    viewModel.addRecurringTransaction(
+                        budgetId, categoryId, label, amount, type, frequency, dayOfMonth, date
+                    ) {
+                        showAddDialog = false
+                    }
                 }
             }
         )
@@ -329,7 +340,7 @@ fun BudgetDetailScreen(
             categories = viewModel.categories,
             existingTransaction = tx,
             onDismiss = { transactionToEdit = null },
-            onConfirm = { categoryId, type, amount, label, date ->
+            onConfirm = { categoryId, type, amount, label, date, _ ->
                 viewModel.updateTransaction(tx.id, budgetId, categoryId, type, amount, label, date) {
                     transactionToEdit = null
                 }
@@ -342,6 +353,7 @@ fun BudgetDetailScreen(
         )
     }
 }
+
 
 @Composable
 fun TransactionRow(transaction: Transaction, onClick: () -> Unit) {
