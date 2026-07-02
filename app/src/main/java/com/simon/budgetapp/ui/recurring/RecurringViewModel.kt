@@ -24,7 +24,11 @@ class RecurringViewModel(application: Application) : AndroidViewModel(applicatio
         private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
+    val monthlyIncomeTotal: Double
+        get() = rules.filter { it.type == "income" }.sumOf { toMonthlyAmount(it) }
 
+    val monthlyExpenseTotal: Double
+        get() = rules.filter { it.type == "expense" }.sumOf { toMonthlyAmount(it) }
     fun loadRules(budgetId: Int) {
         viewModelScope.launch {
             isLoading = true
@@ -100,6 +104,32 @@ class RecurringViewModel(application: Application) : AndroidViewModel(applicatio
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau : ${e.message}"
             }
+        }
+    }
+    private fun toMonthlyAmount(rule: RecurringRule): Double {
+        val amount = rule.amount.toDoubleOrNull() ?: 0.0
+        val interval = if (rule.interval_count > 0) rule.interval_count else 1
+
+        return when (rule.frequency) {
+            "daily"   -> amount * 30.44 / interval
+            "weekly"  -> amount * 4.348 / interval
+            "monthly" -> amount / interval
+            "yearly"  -> {
+                // Ne compte que si le prélèvement tombe sur le mois en cours
+                if (isSameMonthAsNow(rule.next_run_date)) amount else 0.0
+            }
+            else -> 0.0
+        }
+    }
+
+    private fun isSameMonthAsNow(dateStr: String): Boolean {
+        return try {
+            // dateStr au format "yyyy-MM-dd"
+            val ruleMonth = dateStr.substring(5, 7).toInt()
+            val currentMonth = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1
+            ruleMonth == currentMonth
+        } catch (e: Exception) {
+            false
         }
     }
 }

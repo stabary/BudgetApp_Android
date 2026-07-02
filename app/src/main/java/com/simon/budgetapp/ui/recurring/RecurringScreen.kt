@@ -52,25 +52,56 @@ fun RecurringScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            when {
-                viewModel.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Card(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Entrées / mois", style = MaterialTheme.typography.labelMedium)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "${"%.2f".format(viewModel.monthlyIncomeTotal)} €",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
                 }
-                viewModel.rules.isEmpty() -> {
-                    Text(
-                        "Aucune routine.\nAjoute un abonnement récurrent (Netflix, loyer...) !",
-                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
-                    )
+                Card(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Dépenses / mois", style = MaterialTheme.typography.labelMedium)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "${"%.2f".format(viewModel.monthlyExpenseTotal)} €",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFFC62828)
+                        )
+                    }
                 }
-                else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                        items(viewModel.rules) { rule ->
-                            RecurringRuleCard(
-                                rule = rule,
-                                onDeactivate = { viewModel.deactivateRule(rule.id, budgetId) {} }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when {
+                    viewModel.isLoading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                    viewModel.rules.isEmpty() -> {
+                        Text(
+                            "Aucune routine.\nAjoute un abonnement récurrent (Netflix, loyer...) !",
+                            modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                        )
+                    }
+                    else -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                            items(viewModel.rules) { rule ->
+                                RecurringRuleCard(
+                                    rule = rule,
+                                    onDeactivate = { viewModel.deactivateRule(rule.id, budgetId) {} }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                         }
                     }
                 }
