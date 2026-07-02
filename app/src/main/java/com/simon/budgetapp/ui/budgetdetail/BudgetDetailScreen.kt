@@ -65,9 +65,6 @@ fun BudgetDetailScreen(
                     IconButton(onClick = { onNavigateToStats(budgetId) }) {
                         Icon(Icons.Default.PieChart, contentDescription = "Statistiques")
                     }
-                    IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Ajouter une transaction")
-                    }
                     IconButton(onClick = { onNavigateToRecurring(budgetId) }) {
                         Icon(Icons.Default.Repeat, contentDescription = "Routines récurrentes")
                     }
@@ -92,6 +89,19 @@ fun BudgetDetailScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Ajouter une transaction",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
