@@ -17,7 +17,9 @@ data class BarGroup(val label: String, val income: Double, val expense: Double)
 @Composable
 fun BarChartView(
     groups: List<BarGroup>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    incomeColor: Color = Color(0xFF2E7D32),
+    expenseColor: Color = Color(0xFFC62828)
 ) {
     val maxValue = groups.maxOfOrNull { maxOf(it.income, it.expense) } ?: 1.0
     val safeMax = if (maxValue == 0.0) 1.0 else maxValue
@@ -35,15 +37,15 @@ fun BarChartView(
                 val incomeHeight = (group.income / safeMax * size.height).toFloat()
                 val expenseHeight = (group.expense / safeMax * size.height).toFloat()
 
-                // Barre revenu (vert)
+                // Barre revenu
                 drawRect(
-                    color = Color(0xFF2E7D32),
+                    color = incomeColor,
                     topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth - 2, size.height - incomeHeight),
                     size = androidx.compose.ui.geometry.Size(barWidth, incomeHeight)
                 )
-                // Barre dépense (rouge)
+                // Barre dépense
                 drawRect(
-                    color = Color(0xFFC62828),
+                    color = expenseColor,
                     topLeft = androidx.compose.ui.geometry.Offset(centerX + 2, size.height - expenseHeight),
                     size = androidx.compose.ui.geometry.Size(barWidth, expenseHeight)
                 )
@@ -62,4 +64,3 @@ fun BarChartView(
         }
     }
 }
-

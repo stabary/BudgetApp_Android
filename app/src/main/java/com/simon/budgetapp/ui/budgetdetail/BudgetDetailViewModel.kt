@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.simon.budgetapp.data.AppSkin
 import com.simon.budgetapp.data.SessionManager
 import com.simon.budgetapp.network.*
 import kotlinx.coroutines.flow.first
@@ -37,6 +38,23 @@ class BudgetDetailViewModel(application: Application) : AndroidViewModel(applica
         private set
     var accountBalance by mutableStateOf<AccountBalance?>(null)
         private set
+
+    var currentSkin by mutableStateOf(AppSkin.CLASSIQUE)
+        private set
+
+    init {
+        viewModelScope.launch {
+            sessionManager.appSkinFlow.collect { skin ->
+                currentSkin = skin
+            }
+        }
+    }
+
+    fun setSkin(skin: AppSkin) {
+        viewModelScope.launch {
+            sessionManager.setAppSkin(skin)
+        }
+    }
 
     fun loadData(budgetId: Int) {
         viewModelScope.launch {

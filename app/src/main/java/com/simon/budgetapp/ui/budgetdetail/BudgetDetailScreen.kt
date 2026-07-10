@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,9 @@ import com.simon.budgetapp.network.Transaction
 import androidx.compose.material.icons.filled.PieChart
 import com.simon.budgetapp.ui.components.PieChartView
 import com.simon.budgetapp.ui.components.PieSlice
+import com.simon.budgetapp.ui.components.PillRingChartView
+import com.simon.budgetapp.ui.components.PillRingSlice
+import com.simon.budgetapp.ui.components.CloudDecoration
 import androidx.compose.foundation.background
 import com.simon.budgetapp.ui.components.BarChartView
 import com.simon.budgetapp.ui.components.BarGroup
@@ -27,6 +31,10 @@ import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.foundation.layout.BoxWithConstraints
+import com.simon.budgetapp.data.AppSkin
+import com.simon.budgetapp.ui.theme.paletteFor
+import com.simon.budgetapp.ui.theme.skinDisplayName
+
 private val chartColorsList = listOf(
     Color(0xFFEF5350), Color(0xFFFFA726), Color(0xFFFFEE58),
     Color(0xFF66BB6A), Color(0xFF26C6DA), Color(0xFF42A5F5),
@@ -47,15 +55,26 @@ fun BudgetDetailScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
+    var showOverflowMenu by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+
+    val palette = paletteFor(viewModel.currentSkin)
 
     LaunchedEffect(budgetId) {
         viewModel.loadData(budgetId)
     }
 
     Scaffold(
+        containerColor = palette.screenBackground ?: MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(viewModel.balance?.budget_name ?: "Détail du budget") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = palette.topBarBackground ?: MaterialTheme.colorScheme.surface,
+                    titleContentColor = palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface
+                ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Retour")
@@ -87,14 +106,32 @@ fun BudgetDetailScreen(
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Exporter")
                     }
+
+                    Box {
+                        IconButton(onClick = { showOverflowMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = showOverflowMenu,
+                            onDismissRequest = { showOverflowMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Thème") },
+                                onClick = {
+                                    showOverflowMenu = false
+                                    showThemeDialog = true
+                                }
+                            )
+                        }
+                    }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                containerColor = palette.fabBackground ?: MaterialTheme.colorScheme.primary,
+                contentColor = palette.fabContentColor ?: MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(
                     Icons.Default.Add,
@@ -121,11 +158,12 @@ fun BudgetDetailScreen(
                         // Carte de solde
                         viewModel.monthlyBalance?.let { monthly ->
                             item {
-                                val balanceColor = when (monthly.status) {
+                                val defaultBalanceColor = when (monthly.status) {
                                     "danger" -> Color(0xFFC62828)
                                     "warning" -> Color(0xFFF57C00)
                                     else -> Color(0xFF2E7D32)
                                 }
+                                val monthlyContentColor = palette.monthlyCardContentColor ?: defaultBalanceColor
 
                                 BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                                     val isTablet = maxWidth > 600.dp
@@ -133,43 +171,67 @@ fun BudgetDetailScreen(
                                     val monthlyCard: @Composable () -> Unit = {
                                         Card(
                                             onClick = { onNavigateToCategoryDetail(budgetId) },
-                                            modifier = Modifier.fillMaxWidth()
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = palette.monthlyCardBackground ?: CardDefaults.cardColors().containerColor
+                                            )
                                         ) {
                                             Column(modifier = Modifier.padding(16.dp)) {
                                                 Text(
                                                     text = "Solde du mois : ${"%.2f".format(monthly.balance)} €",
                                                     style = MaterialTheme.typography.headlineSmall,
-                                                    color = balanceColor
+                                                    color = monthlyContentColor
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
-                                                Text("Entrées : ${"%.2f".format(monthly.total_income)} € · Dépenses : ${"%.2f".format(monthly.total_expense)} €")
+                                                Text(
+                                                    "Entrées : ${"%.2f".format(monthly.total_income)} € · Dépenses : ${"%.2f".format(monthly.total_expense)} €",
+                                                    color = palette.monthlyCardContentColor ?: Color.Unspecified
+                                                )
                                             }
                                         }
                                     }
 
                                     val accountCard: @Composable () -> Unit = {
                                         viewModel.accountBalance?.let { account ->
-                                            Card(modifier = Modifier.fillMaxWidth()) {
-                                                Column(modifier = Modifier.padding(16.dp)) {
-                                                    val accountColor = if (account.account_balance >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)
+                                            val defaultAccountColor = if (account.account_balance >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)
+                                            val accountContentColor = palette.accountCardContentColor ?: defaultAccountColor
 
-                                                    Text(
-                                                        text = "Solde de compte : ${"%.2f".format(account.account_balance)} €",
-                                                        style = MaterialTheme.typography.headlineSmall,
-                                                        color = accountColor
-                                                    )
+                                            Card(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = palette.accountCardBackground ?: CardDefaults.cardColors().containerColor
+                                                )
+                                            ) {
+                                                Box(modifier = Modifier.fillMaxWidth()) {
+                                                    Column(modifier = Modifier.padding(16.dp)) {
+                                                        Text(
+                                                            text = "Solde de compte : ${"%.2f".format(account.account_balance)} €",
+                                                            style = MaterialTheme.typography.headlineSmall,
+                                                            color = accountContentColor
+                                                        )
 
-                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                        Spacer(modifier = Modifier.height(8.dp))
 
-                                                    Text(
-                                                        text = "Entrées globales : ${"%.2f".format(account.actual_income)} €",
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
-                                                    Spacer(modifier = Modifier.height(4.dp))
-                                                    Text(
-                                                        text = "Dépenses globales : ${"%.2f".format(account.actual_expense)} €",
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
+                                                        Text(
+                                                            text = "Entrées globales : ${"%.2f".format(account.actual_income)} €",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            color = palette.accountCardContentColor ?: Color.Unspecified
+                                                        )
+                                                        Spacer(modifier = Modifier.height(4.dp))
+                                                        Text(
+                                                            text = "Dépenses globales : ${"%.2f".format(account.actual_expense)} €",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            color = palette.accountCardContentColor ?: Color.Unspecified
+                                                        )
+                                                    }
+                                                    if (palette.showCloudDecoration) {
+                                                        CloudDecoration(
+                                                            color = Color.White.copy(alpha = 0.35f),
+                                                            modifier = Modifier
+                                                                .align(Alignment.BottomEnd)
+                                                                .padding(12.dp)
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -194,30 +256,34 @@ fun BudgetDetailScreen(
                             }
                         }
 
-                        // Pie chart
+                        // Pie chart / Anneau pilules (Douceur)
                         if (viewModel.currentMonthCategories.isNotEmpty()) {
                             item {
                                 val total = viewModel.currentMonthCategories.sumOf { it.total.toDoubleOrNull() ?: 0.0 }
-                                val slices = viewModel.currentMonthCategories.mapIndexed { index, item ->
-                                    PieSlice(
-                                        label = item.category_name ?: "Autres",
-                                        value = item.total.toDoubleOrNull() ?: 0.0,
-                                        color = chartColorsList[index % chartColorsList.size]
-                                    )
-                                }
 
                                 Column {
-                                    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                                    if (palette.useRoundedRingChart) {
+                                        val colors = palette.ringSliceColors ?: chartColorsList
+                                        val ringSlices = viewModel.currentMonthCategories.mapIndexed { index, item ->
+                                            PillRingSlice(
+                                                label = item.category_name ?: "Autres",
+                                                value = item.total.toDoubleOrNull() ?: 0.0,
+                                                color = colors[index % colors.size]
+                                            )
+                                        }
+
                                         Row(
-                                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            PieChartView(slices = slices)
+                                            PillRingChartView(
+                                                slices = ringSlices,
+                                                centerLabel = "Dépenses\ndu mois",
+
+                                            )
                                             Spacer(modifier = Modifier.width(16.dp))
                                             Column {
-                                                Text("Dépenses du mois", style = MaterialTheme.typography.titleSmall)
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                slices.take(5).forEach { slice ->
+                                                ringSlices.forEach { slice ->
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                                         Box(
                                                             modifier = Modifier
@@ -227,8 +293,46 @@ fun BudgetDetailScreen(
                                                         Spacer(modifier = Modifier.width(6.dp))
                                                         Text(
                                                             "${slice.label} (${(slice.value / total * 100).toInt()}%)",
-                                                            style = MaterialTheme.typography.bodySmall
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = Color.Black
+
                                                         )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        val slices = viewModel.currentMonthCategories.mapIndexed { index, item ->
+                                            PieSlice(
+                                                label = item.category_name ?: "Autres",
+                                                value = item.total.toDoubleOrNull() ?: 0.0,
+                                                color = chartColorsList[index % chartColorsList.size]
+                                            )
+                                        }
+
+                                        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                PieChartView(slices = slices)
+                                                Spacer(modifier = Modifier.width(16.dp))
+                                                Column {
+                                                    Text("Dépenses du mois", style = MaterialTheme.typography.titleSmall)
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    slices.take(5).forEach { slice ->
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(10.dp)
+                                                                    .background(slice.color, shape = androidx.compose.foundation.shape.CircleShape)
+                                                            )
+                                                            Spacer(modifier = Modifier.width(6.dp))
+                                                            Text(
+                                                                "${slice.label} (${(slice.value / total * 100).toInt()}%)",
+                                                                style = MaterialTheme.typography.bodySmall
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
@@ -263,7 +367,15 @@ fun BudgetDetailScreen(
                                         Column(modifier = Modifier.padding(16.dp)) {
                                             Text("Historique (6 derniers mois)", style = MaterialTheme.typography.titleSmall)
                                             Spacer(modifier = Modifier.height(12.dp))
-                                            BarChartView(groups = groups)
+                                            if (palette.historyBarPrimaryColor != null && palette.historyBarSecondaryColor != null) {
+                                                BarChartView(
+                                                    groups = groups,
+                                                    incomeColor = palette.historyBarPrimaryColor,
+                                                    expenseColor = palette.historyBarSecondaryColor
+                                                )
+                                            } else {
+                                                BarChartView(groups = groups)
+                                            }
                                         }
                                     }
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -275,13 +387,23 @@ fun BudgetDetailScreen(
                         if (viewModel.upcomingRules.isNotEmpty()) {
                             item {
                                 Column {
-                                    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = palette.upcomingCardBackground ?: CardDefaults.cardColors().containerColor
+                                        )
+                                    ) {
                                         Column(modifier = Modifier.padding(16.dp)) {
-                                            Text("À venir ce mois", style = MaterialTheme.typography.titleSmall)
+                                            Text(
+                                                "À venir ce mois",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = palette.upcomingCardContentColor ?: Color.Unspecified
+                                            )
                                             Spacer(modifier = Modifier.height(8.dp))
                                             viewModel.upcomingRules.forEach { rule ->
                                                 val isExpense = rule.type == "expense"
                                                 val amount = rule.amount.toDoubleOrNull() ?: 0.0
+                                                val defaultAmountColor = if (isExpense) Color(0xFFC62828).copy(alpha = 0.7f) else Color(0xFF2E7D32).copy(alpha = 0.7f)
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                                     horizontalArrangement = Arrangement.SpaceBetween
@@ -289,13 +411,14 @@ fun BudgetDetailScreen(
                                                     Text(
                                                         "${rule.label} (prévu le ${rule.next_run_date.takeLast(2)})",
                                                         style = MaterialTheme.typography.bodyMedium,
-                                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                                        color = palette.upcomingCardContentColor ?: Color.Unspecified
                                                     )
                                                     Text(
                                                         "${if (isExpense) "-" else "+"}${"%.2f".format(amount)} €",
                                                         style = MaterialTheme.typography.bodyMedium,
                                                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                                        color = if (isExpense) Color(0xFFC62828).copy(alpha = 0.7f) else Color(0xFF2E7D32).copy(alpha = 0.7f)
+                                                        color = palette.upcomingCardContentColor ?: defaultAmountColor
                                                     )
                                                 }
                                             }
@@ -309,7 +432,13 @@ fun BudgetDetailScreen(
                         // Liste des transactions
                         items(viewModel.transactions) { tx ->
                             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                                TransactionRow(tx, onClick = { transactionToEdit = tx })
+                                TransactionRow(
+                                    transaction = tx,
+                                    onClick = { transactionToEdit = tx },
+                                    backgroundColor = palette.transactionRowBackground,
+                                    contentColor = palette.transactionRowContentColor,
+                                    showCloud = palette.showCloudDecoration
+                                )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -320,6 +449,17 @@ fun BudgetDetailScreen(
                 }
             }
         }
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            currentSkin = viewModel.currentSkin,
+            onSelect = { skin ->
+                viewModel.setSkin(skin)
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
+        )
     }
 
     if (showAddDialog) {
@@ -364,26 +504,91 @@ fun BudgetDetailScreen(
     }
 }
 
+@Composable
+private fun ThemeSelectionDialog(
+    currentSkin: AppSkin,
+    onSelect: (AppSkin) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Choisir un thème") },
+        text = {
+            Column {
+                AppSkin.entries.forEach { skin ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = skin == currentSkin,
+                            onClick = { onSelect(skin) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(skinDisplayName(skin))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Fermer") }
+        }
+    )
+}
 
 @Composable
-fun TransactionRow(transaction: Transaction, onClick: () -> Unit) {
+fun TransactionRow(
+    transaction: Transaction,
+    onClick: () -> Unit,
+    backgroundColor: Color? = null,
+    contentColor: Color? = null,
+    showCloud: Boolean = false
+) {
     val isExpense = transaction.type == "expense"
     val amountValue = transaction.amount.toDoubleOrNull() ?: 0.0
+    val defaultAmountColor = if (isExpense) Color(0xFFC62828) else Color(0xFF2E7D32)
 
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(text = transaction.label, style = MaterialTheme.typography.titleMedium)
-                Text(text = transaction.transaction_date, style = MaterialTheme.typography.bodySmall)
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor ?: CardDefaults.cardColors().containerColor
+        )
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = transaction.label,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = contentColor ?: Color.Unspecified
+                    )
+                    Text(
+                        text = transaction.transaction_date,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor ?: Color.Unspecified
+                    )
+                }
+                Text(
+                    text = "${if (isExpense) "-" else "+"}${"%.2f".format(amountValue)} €",
+                    color = contentColor ?: defaultAmountColor,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
-            Text(
-                text = "${if (isExpense) "-" else "+"}${"%.2f".format(amountValue)} €",
-                color = if (isExpense) Color(0xFFC62828) else Color(0xFF2E7D32),
-                style = MaterialTheme.typography.titleMedium
-            )
+            if (showCloud) {
+                CloudDecoration(
+                    color = Color.White.copy(alpha = 0.35f),
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 90.dp)
+                        .size(36.dp)
+                )
+            }
         }
     }
 }
