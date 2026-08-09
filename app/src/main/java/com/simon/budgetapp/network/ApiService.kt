@@ -148,5 +148,8 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("budgetId") budgetId: Int
     ): Response<AccountBalance>
+
+    @POST("auth/resend-verification")
+    suspend fun resendVerification(@Body request: ResendVerificationRequest): Response<Map<String, String>>
 }
 

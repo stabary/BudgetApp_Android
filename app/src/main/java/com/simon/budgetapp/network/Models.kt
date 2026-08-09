@@ -169,3 +169,12 @@ data class AccountBalance(
     val account_balance: Double
 )
 
+data class ResendVerificationRequest(
+    val email: String
+)
+
+data class ErrorResponse(
+    val error: String? = null,
+    val message: String? = null
+)
+

@@ -12,7 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (email: String) -> Unit,
     onNavigateToLogin: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
@@ -96,7 +96,7 @@ fun RegisterScreen(
                         is AuthState.Loading -> isLoading = true
                         is AuthState.Success -> {
                             isLoading = false
-                            onRegisterSuccess()
+                            onRegisterSuccess(email)
                         }
                         is AuthState.Error -> {
                             isLoading = false
@@ -124,4 +124,3 @@ fun RegisterScreen(
         }
     }
 }
-

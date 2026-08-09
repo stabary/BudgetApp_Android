@@ -11,6 +11,7 @@ import com.simon.budgetapp.ui.budgets.BudgetsScreen
 import com.simon.budgetapp.ui.budgetdetail.BudgetDetailScreen
 import com.simon.budgetapp.ui.stats.StatsScreen
 import com.simon.budgetapp.ui.auth.RegisterScreen
+import com.simon.budgetapp.ui.auth.EmailVerificationScreen
 import com.simon.budgetapp.ui.recurring.RecurringScreen
 import com.simon.budgetapp.ui.sharing.SharingScreen
 import com.simon.budgetapp.ui.auth.SplashScreen
@@ -40,14 +41,29 @@ fun AppNavigation() {
 
         composable(Screen.Register.route) {
             RegisterScreen(
-                onRegisterSuccess = {
-                    // Une fois inscrit, on renvoie vers Login pour que l'utilisateur se connecte
-                    navController.navigate(Screen.Login.route) {
+                onRegisterSuccess = { email ->
+                    navController.navigate(Screen.EmailVerification.createRoute(email)) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },
                 onNavigateToLogin = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.EmailVerification.route,
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val encodedEmail = backStackEntry.arguments?.getString("email") ?: ""
+            val email = Screen.EmailVerification.decodeEmail(encodedEmail)
+            EmailVerificationScreen(
+                email = email,
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.EmailVerification.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -134,4 +150,3 @@ fun AppNavigation() {
 
     }
 }
-

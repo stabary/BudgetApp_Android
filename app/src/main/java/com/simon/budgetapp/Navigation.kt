@@ -1,5 +1,8 @@
 package com.simon.budgetapp
 
+import java.net.URLDecoder
+import java.net.URLEncoder
+
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Budgets : Screen("budgets")
@@ -13,6 +16,10 @@ sealed class Screen(val route: String) {
         fun createRoute(budgetId: Int) = "category_detail/$budgetId"
     }
     object Register : Screen("register")
+    object EmailVerification : Screen("email_verification/{email}") {
+        fun createRoute(email: String) = "email_verification/${URLEncoder.encode(email, "UTF-8")}"
+        fun decodeEmail(encoded: String) = URLDecoder.decode(encoded, "UTF-8")
+    }
     object Recurring : Screen("recurring/{budgetId}") {
         fun createRoute(budgetId: Int) = "recurring/$budgetId"
     }
@@ -22,4 +29,3 @@ sealed class Screen(val route: String) {
     object Splash : Screen("splash")
 
 }
-

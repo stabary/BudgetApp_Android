@@ -20,6 +20,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isEmailNotVerified by remember { mutableStateOf(false) }
+    var showResendDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -58,12 +60,19 @@ fun LoginScreen(
 
         errorMessage?.let {
             Text(text = it, color = MaterialTheme.colorScheme.error)
+            if (isEmailNotVerified) {
+                Spacer(modifier = Modifier.height(4.dp))
+                TextButton(onClick = { showResendDialog = true }) {
+                    Text("Renvoyer le mail de vérification")
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
         }
 
         Button(
             onClick = {
                 errorMessage = null
+                isEmailNotVerified = false
                 viewModel.login(username, password) { state ->
                     when (state) {
                         is AuthState.Loading -> isLoading = true
@@ -74,6 +83,12 @@ fun LoginScreen(
                         is AuthState.Error -> {
                             isLoading = false
                             errorMessage = state.message
+                            isEmailNotVerified = false
+                        }
+                        is AuthState.EmailNotVerified -> {
+                            isLoading = false
+                            errorMessage = state.message
+                            isEmailNotVerified = true
                         }
                         else -> {}
                     }
@@ -95,4 +110,64 @@ fun LoginScreen(
             Text("Pas encore de compte ? S'inscrire")
         }
     }
+
+    if (showResendDialog) {
+        ResendVerificationDialog(
+            initialEmail = "",
+            viewModel = viewModel,
+            onDismiss = { showResendDialog = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ResendVerificationDialog(
+    initialEmail: String,
+    viewModel: AuthViewModel,
+    onDismiss: () -> Unit
+) {
+    var email by remember { mutableStateOf(initialEmail) }
+    var isSending by remember { mutableStateOf(false) }
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Renvoyer le mail de vérification") },
+        text = {
+            Column {
+                Text("Entre l'adresse email utilisée à l'inscription :")
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                feedbackMessage?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(it, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    isSending = true
+                    feedbackMessage = null
+                    viewModel.resendVerification(email) { _, message ->
+                        isSending = false
+                        feedbackMessage = message
+                    }
+                },
+                enabled = email.isNotBlank() && !isSending
+            ) {
+                Text(if (isSending) "Envoi..." else "Envoyer")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Fermer") }
+        }
+    )
 }
