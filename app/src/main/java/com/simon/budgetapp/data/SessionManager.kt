@@ -12,7 +12,8 @@ private val Context.dataStore by preferencesDataStore(name = "session")
 
 enum class AppSkin {
     CLASSIQUE,
-    DOUCEUR
+    DOUCEUR,
+    EPURE
 }
 
 class SessionManager(private val context: Context) {

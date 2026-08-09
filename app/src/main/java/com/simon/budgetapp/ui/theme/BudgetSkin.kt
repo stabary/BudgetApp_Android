@@ -11,6 +11,7 @@ data class BudgetDetailPalette(
     val screenBackground: Color? = null,
     val topBarBackground: Color? = null,
     val topBarContentColor: Color? = null,
+    val topBarIconColor: Color? = null,
     val monthlyCardBackground: Color? = null,
     val monthlyCardContentColor: Color? = null,
     val accountCardBackground: Color? = null,
@@ -19,6 +20,11 @@ data class BudgetDetailPalette(
     val upcomingCardContentColor: Color? = null,
     val transactionRowBackground: Color? = null,
     val transactionRowContentColor: Color? = null,
+    val cardLabelColor: Color? = null,
+    val incomeColor: Color? = null,
+    val expenseColor: Color? = null,
+    val chartCardBackground: Color? = null,
+    val chartCardContentColor: Color? = null,
     val ringSliceColors: List<Color>? = null,
     val historyBarPrimaryColor: Color? = null,
     val historyBarSecondaryColor: Color? = null,
@@ -57,9 +63,43 @@ fun paletteFor(skin: AppSkin): BudgetDetailPalette = when (skin) {
         useRoundedRingChart = true,
         showCloudDecoration = true
     )
+
+    AppSkin.EPURE -> BudgetDetailPalette(
+        screenBackground = Color(0xFFF7F7F5),
+        topBarBackground = Color(0xFFFFFFFF),
+        topBarContentColor = Color(0xFF1A1A18),
+        topBarIconColor = Color(0xFF8A8A84),
+        monthlyCardBackground = Color(0xFFFFFFFF),
+        monthlyCardContentColor = Color(0xFF1A1A18),
+        accountCardBackground = Color(0xFFFFFFFF),
+        accountCardContentColor = Color(0xFF1A1A18),
+        upcomingCardBackground = Color(0xFFFFFFFF),
+        upcomingCardContentColor = Color(0xFF1A1A18),
+        transactionRowBackground = Color(0xFFFFFFFF),
+        transactionRowContentColor = Color(0xFF1A1A18),
+        cardLabelColor = Color(0xFF8A8A84),
+        incomeColor = Color(0xFF3A6B4F),
+        expenseColor = Color(0xFFB4472F),
+        chartCardBackground = Color(0xFFFFFFFF),
+        chartCardContentColor = Color(0xFF1A1A18),
+        ringSliceColors = listOf(
+            Color(0xFF4A4A9C), // Loyer
+            Color(0xFFC77B4A), // Courses
+            Color(0xFF3A6B4F), // Alimentation
+            Color(0xFF8A8A84), // Assurance
+            Color(0xFFB4472F)  // Divers
+        ),
+        historyBarPrimaryColor = Color(0xFF3A6B4F),   // entrées
+        historyBarSecondaryColor = Color(0xFFB4472F), // dépenses
+        fabBackground = Color(0xFF4A4A9C),
+        fabContentColor = Color.White,
+        useRoundedRingChart = false,
+        showCloudDecoration = false
+    )
 }
 
 fun skinDisplayName(skin: AppSkin): String = when (skin) {
     AppSkin.CLASSIQUE -> "Classique"
     AppSkin.DOUCEUR -> "Douceur"
+    AppSkin.EPURE -> "Épuré"
 }

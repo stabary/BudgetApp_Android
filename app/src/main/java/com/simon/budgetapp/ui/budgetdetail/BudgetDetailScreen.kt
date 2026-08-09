@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,6 +44,9 @@ private val chartColorsList = listOf(
     Color(0xFF78909C)
 )
 
+private val defaultIncomeColor = Color(0xFF2E7D32)
+private val defaultExpenseColor = Color(0xFFC62828)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetDetailScreen(
@@ -59,6 +64,7 @@ fun BudgetDetailScreen(
     var showThemeDialog by remember { mutableStateOf(false) }
 
     val palette = paletteFor(viewModel.currentSkin)
+    val topBarIconColor = palette.topBarIconColor ?: palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface
 
     LaunchedEffect(budgetId) {
         viewModel.loadData(budgetId)
@@ -72,8 +78,8 @@ fun BudgetDetailScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = palette.topBarBackground ?: MaterialTheme.colorScheme.surface,
                     titleContentColor = palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = palette.topBarContentColor ?: MaterialTheme.colorScheme.onSurface
+                    navigationIconContentColor = topBarIconColor,
+                    actionIconContentColor = topBarIconColor
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -164,6 +170,11 @@ fun BudgetDetailScreen(
                                     else -> Color(0xFF2E7D32)
                                 }
                                 val monthlyContentColor = palette.monthlyCardContentColor ?: defaultBalanceColor
+                                val monthlyLabelColor = palette.cardLabelColor
+                                    ?: palette.monthlyCardContentColor?.copy(alpha = 0.7f)
+                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                val incomeColor = palette.incomeColor ?: defaultIncomeColor
+                                val expenseColor = palette.expenseColor ?: defaultExpenseColor
 
                                 BoxWithConstraints(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                                     val isTablet = maxWidth > 600.dp
@@ -178,15 +189,47 @@ fun BudgetDetailScreen(
                                         ) {
                                             Column(modifier = Modifier.padding(16.dp)) {
                                                 Text(
-                                                    text = "Solde du mois : ${"%.2f".format(monthly.balance)} €",
-                                                    style = MaterialTheme.typography.headlineSmall,
-                                                    color = monthlyContentColor
+                                                    text = "Solde du mois",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = monthlyLabelColor
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
-                                                    "Entrées : ${"%.2f".format(monthly.total_income)} € · Dépenses : ${"%.2f".format(monthly.total_expense)} €",
-                                                    color = palette.monthlyCardContentColor ?: Color.Unspecified
+                                                    text = "${"%.2f".format(monthly.balance)} €",
+                                                    style = MaterialTheme.typography.headlineMedium,
+                                                    color = monthlyContentColor
                                                 )
+                                                Spacer(modifier = Modifier.height(10.dp))
+                                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            Icons.Default.ArrowUpward,
+                                                            contentDescription = null,
+                                                            tint = incomeColor,
+                                                            modifier = Modifier.size(14.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(
+                                                            "${"%.2f".format(monthly.total_income)} €",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = incomeColor
+                                                        )
+                                                    }
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            Icons.Default.ArrowDownward,
+                                                            contentDescription = null,
+                                                            tint = expenseColor,
+                                                            modifier = Modifier.size(14.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(
+                                                            "${"%.2f".format(monthly.total_expense)} €",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = expenseColor
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -195,6 +238,9 @@ fun BudgetDetailScreen(
                                         viewModel.accountBalance?.let { account ->
                                             val defaultAccountColor = if (account.account_balance >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)
                                             val accountContentColor = palette.accountCardContentColor ?: defaultAccountColor
+                                            val accountLabelColor = palette.cardLabelColor
+                                                ?: palette.accountCardContentColor?.copy(alpha = 0.7f)
+                                                ?: MaterialTheme.colorScheme.onSurfaceVariant
 
                                             Card(
                                                 modifier = Modifier.fillMaxWidth(),
@@ -205,24 +251,47 @@ fun BudgetDetailScreen(
                                                 Box(modifier = Modifier.fillMaxWidth()) {
                                                     Column(modifier = Modifier.padding(16.dp)) {
                                                         Text(
-                                                            text = "Solde de compte : ${"%.2f".format(account.account_balance)} €",
-                                                            style = MaterialTheme.typography.headlineSmall,
-                                                            color = accountContentColor
-                                                        )
-
-                                                        Spacer(modifier = Modifier.height(8.dp))
-
-                                                        Text(
-                                                            text = "Entrées globales : ${"%.2f".format(account.actual_income)} €",
-                                                            style = MaterialTheme.typography.bodyMedium,
-                                                            color = palette.accountCardContentColor ?: Color.Unspecified
+                                                            text = "Solde de compte",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = accountLabelColor
                                                         )
                                                         Spacer(modifier = Modifier.height(4.dp))
                                                         Text(
-                                                            text = "Dépenses globales : ${"%.2f".format(account.actual_expense)} €",
-                                                            style = MaterialTheme.typography.bodyMedium,
-                                                            color = palette.accountCardContentColor ?: Color.Unspecified
+                                                            text = "${"%.2f".format(account.account_balance)} €",
+                                                            style = MaterialTheme.typography.headlineMedium,
+                                                            color = accountContentColor
                                                         )
+                                                        Spacer(modifier = Modifier.height(10.dp))
+                                                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Icon(
+                                                                    Icons.Default.ArrowUpward,
+                                                                    contentDescription = null,
+                                                                    tint = palette.incomeColor ?: defaultIncomeColor,
+                                                                    modifier = Modifier.size(14.dp)
+                                                                )
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(
+                                                                    "${"%.2f".format(account.actual_income)} €",
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    color = palette.incomeColor ?: defaultIncomeColor
+                                                                )
+                                                            }
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Icon(
+                                                                    Icons.Default.ArrowDownward,
+                                                                    contentDescription = null,
+                                                                    tint = palette.expenseColor ?: defaultExpenseColor,
+                                                                    modifier = Modifier.size(14.dp)
+                                                                )
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(
+                                                                    "${"%.2f".format(account.actual_expense)} €",
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    color = palette.expenseColor ?: defaultExpenseColor
+                                                                )
+                                                            }
+                                                        }
                                                     }
                                                     if (palette.showCloudDecoration) {
                                                         CloudDecoration(
@@ -280,7 +349,7 @@ fun BudgetDetailScreen(
                                                 slices = ringSlices,
                                                 centerLabel = "Dépenses\ndu mois",
 
-                                            )
+                                                )
                                             Spacer(modifier = Modifier.width(16.dp))
                                             Column {
                                                 ringSlices.forEach { slice ->
@@ -302,15 +371,21 @@ fun BudgetDetailScreen(
                                             }
                                         }
                                     } else {
+                                        val colors = palette.ringSliceColors ?: chartColorsList
                                         val slices = viewModel.currentMonthCategories.mapIndexed { index, item ->
                                             PieSlice(
                                                 label = item.category_name ?: "Autres",
                                                 value = item.total.toDoubleOrNull() ?: 0.0,
-                                                color = chartColorsList[index % chartColorsList.size]
+                                                color = colors[index % colors.size]
                                             )
                                         }
 
-                                        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = palette.chartCardBackground ?: CardDefaults.cardColors().containerColor
+                                            )
+                                        ) {
                                             Row(
                                                 modifier = Modifier.padding(16.dp).fillMaxWidth(),
                                                 verticalAlignment = Alignment.CenterVertically
@@ -318,7 +393,11 @@ fun BudgetDetailScreen(
                                                 PieChartView(slices = slices)
                                                 Spacer(modifier = Modifier.width(16.dp))
                                                 Column {
-                                                    Text("Dépenses du mois", style = MaterialTheme.typography.titleSmall)
+                                                    Text(
+                                                        "Dépenses du mois",
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        color = palette.chartCardContentColor ?: Color.Unspecified
+                                                    )
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                     slices.take(5).forEach { slice ->
                                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -330,7 +409,8 @@ fun BudgetDetailScreen(
                                                             Spacer(modifier = Modifier.width(6.dp))
                                                             Text(
                                                                 "${slice.label} (${(slice.value / total * 100).toInt()}%)",
-                                                                style = MaterialTheme.typography.bodySmall
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = palette.chartCardContentColor ?: Color.Unspecified
                                                             )
                                                         }
                                                     }
@@ -363,9 +443,18 @@ fun BudgetDetailScreen(
                                 }
 
                                 Column {
-                                    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = palette.chartCardBackground ?: CardDefaults.cardColors().containerColor
+                                        )
+                                    ) {
                                         Column(modifier = Modifier.padding(16.dp)) {
-                                            Text("Historique (6 derniers mois)", style = MaterialTheme.typography.titleSmall)
+                                            Text(
+                                                "Historique (6 derniers mois)",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = palette.chartCardContentColor ?: Color.Unspecified
+                                            )
                                             Spacer(modifier = Modifier.height(12.dp))
                                             if (palette.historyBarPrimaryColor != null && palette.historyBarSecondaryColor != null) {
                                                 BarChartView(
