@@ -62,7 +62,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     onResult(AuthState.Success)
                 } else {
-                    onResult(AuthState.Error("Inscription impossible (nom ou email déjà utilisé ?)"))
+                    val parsedError = parseErrorBody(response.errorBody()?.string())
+                    val message = parsedError?.error
+                        ?: "Inscription impossible (nom ou email déjà utilisé ?)"
+                    onResult(AuthState.Error(message))
                 }
             } catch (e: Exception) {
                 onResult(AuthState.Error("Erreur réseau : ${e.message}"))
