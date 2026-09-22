@@ -29,6 +29,7 @@ import com.simon.budgetapp.ui.components.BarGroup
 import java.text.SimpleDateFormat as SimpleDateFormatJava
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.ChevronRight
 import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Share
@@ -36,6 +37,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import com.simon.budgetapp.data.AppSkin
 import com.simon.budgetapp.ui.theme.paletteFor
 import com.simon.budgetapp.ui.theme.skinDisplayName
+import com.simon.budgetapp.ui.goals.smileyEmoji
 
 private val chartColorsList = listOf(
     Color(0xFFEF5350), Color(0xFFFFA726), Color(0xFFFFEE58),
@@ -55,7 +57,8 @@ fun BudgetDetailScreen(
     onNavigateToStats: (Int) -> Unit,
     onNavigateToRecurring: (Int) -> Unit,
     onNavigateToSharing: (Int) -> Unit,
-    onNavigateToCategoryDetail: (Int) -> Unit,   // <-- nouveau
+    onNavigateToCategoryDetail: (Int) -> Unit,
+    onNavigateToGoals: (Int) -> Unit,
     viewModel: BudgetDetailViewModel = viewModel()
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -160,6 +163,41 @@ fun BudgetDetailScreen(
                 }
                 else -> {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
+
+                        // Brique smiley -> écran Objectifs
+                        item {
+                            Card(
+                                onClick = { onNavigateToGoals(budgetId) },
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = palette.smileyCardBackground ?: CardDefaults.cardColors().containerColor
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = smileyEmoji(viewModel.goalSmiley),
+                                            style = MaterialTheme.typography.headlineMedium
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            "Voir mon objectif budgétaire",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = palette.smileyCardContentColor ?: Color.Unspecified
+                                        )
+                                    }
+                                    Icon(
+                                        Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = palette.smileyCardContentColor ?: Color.Unspecified
+                                    )
+                                }
+                            }
+                        }
 
                         // Carte de solde
                         viewModel.monthlyBalance?.let { monthly ->

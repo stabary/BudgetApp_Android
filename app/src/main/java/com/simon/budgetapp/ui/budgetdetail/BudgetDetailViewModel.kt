@@ -38,6 +38,8 @@ class BudgetDetailViewModel(application: Application) : AndroidViewModel(applica
         private set
     var accountBalance by mutableStateOf<AccountBalance?>(null)
         private set
+    var goalSmiley by mutableStateOf<String?>(null)
+        private set
 
     var currentSkin by mutableStateOf(AppSkin.CLASSIQUE)
         private set
@@ -114,6 +116,20 @@ class BudgetDetailViewModel(application: Application) : AndroidViewModel(applica
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau : ${e.message}"
             }
+
+            // Appel séparé et silencieux : ne doit jamais bloquer le reste de l'écran
+            try {
+                val token = sessionManager.tokenFlow.first()
+                if (token != null) {
+                    val goalStatusResponse = api.getGoalStatus("Bearer $token", budgetId)
+                    if (goalStatusResponse.isSuccessful) {
+                        goalSmiley = goalStatusResponse.body()?.smiley
+                    }
+                }
+            } catch (e: Exception) {
+                // silencieux, non bloquant pour l'écran principal
+            }
+
             isLoading = false
         }
     }

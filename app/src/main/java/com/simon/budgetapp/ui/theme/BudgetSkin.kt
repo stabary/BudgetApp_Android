@@ -30,6 +30,8 @@ data class BudgetDetailPalette(
     val historyBarSecondaryColor: Color? = null,
     val fabBackground: Color? = null,
     val fabContentColor: Color? = null,
+    val smileyCardBackground: Color? = null,
+    val smileyCardContentColor: Color? = null,
     val useRoundedRingChart: Boolean = false,
     val showCloudDecoration: Boolean = false
 )
@@ -60,6 +62,8 @@ fun paletteFor(skin: AppSkin): BudgetDetailPalette = when (skin) {
         historyBarSecondaryColor = Color(0xFFC5ACD2),
         fabBackground = Color(0xFF42949A),
         fabContentColor = Color.White,
+        smileyCardBackground = Color(0xFF82C1C8),
+        smileyCardContentColor = Color(0xFF16302F),
         useRoundedRingChart = true,
         showCloudDecoration = true
     )
@@ -93,6 +97,8 @@ fun paletteFor(skin: AppSkin): BudgetDetailPalette = when (skin) {
         historyBarSecondaryColor = Color(0xFFB4472F), // dépenses
         fabBackground = Color(0xFF4A4A9C),
         fabContentColor = Color.White,
+        smileyCardBackground = Color(0xFFFFFFFF),
+        smileyCardContentColor = Color(0xFF1A1A18),
         useRoundedRingChart = false,
         showCloudDecoration = false
     )

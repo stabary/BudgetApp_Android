@@ -26,6 +26,9 @@ sealed class Screen(val route: String) {
     object Sharing : Screen("sharing/{budgetId}") {
         fun createRoute(budgetId: Int) = "sharing/$budgetId"
     }
+    object Goals : Screen("goals/{budgetId}") {
+        fun createRoute(budgetId: Int) = "goals/$budgetId"
+    }
     object Splash : Screen("splash")
 
 }

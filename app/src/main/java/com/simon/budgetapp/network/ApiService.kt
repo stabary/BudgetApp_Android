@@ -151,5 +151,23 @@ interface ApiService {
 
     @POST("auth/resend-verification")
     suspend fun resendVerification(@Body request: ResendVerificationRequest): Response<Map<String, String>>
-}
 
+    @GET("budgets/{budgetId}/goals")
+    suspend fun getBudgetGoals(
+        @Header("Authorization") token: String,
+        @Path("budgetId") budgetId: Int
+    ): Response<BudgetGoals>
+
+    @PUT("budgets/{budgetId}/goals")
+    suspend fun updateBudgetGoals(
+        @Header("Authorization") token: String,
+        @Path("budgetId") budgetId: Int,
+        @Body request: UpdateGoalsRequest
+    ): Response<Map<String, Any>>
+
+    @GET("budgets/{budgetId}/goal-status")
+    suspend fun getGoalStatus(
+        @Header("Authorization") token: String,
+        @Path("budgetId") budgetId: Int
+    ): Response<GoalStatus>
+}

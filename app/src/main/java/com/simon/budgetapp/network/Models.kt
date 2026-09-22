@@ -178,3 +178,32 @@ data class ErrorResponse(
     val message: String? = null
 )
 
+// --- Objectifs budgétaires ---
+
+data class BudgetGoals(
+    val pct_epargne: Double,
+    val pct_loisir: Double,
+    val pct_fonctionnement: Double
+)
+
+data class UpdateGoalsRequest(
+    val pct_epargne: Double,
+    val pct_loisir: Double,
+    val pct_fonctionnement: Double
+)
+
+data class GoalBreakdownItem(
+    val super_category: String,
+    val pct_cible: Double,
+    val pct_reel: Double,
+    val montant_cible: Double,
+    val montant_depense: Double,
+    val reste_a_depenser: Double
+)
+
+data class GoalStatus(
+    val revenu_mensuel: Double,
+    val smiley: String, // "happy", "neutral", "warning", "sad"
+    val breakdown: List<GoalBreakdownItem>
+)
+
