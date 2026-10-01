@@ -206,4 +206,7 @@ data class GoalStatus(
     val smiley: String, // "happy", "neutral", "warning", "sad"
     val breakdown: List<GoalBreakdownItem>
 )
+data class UpdateRecurringRuleDateRequest(
+    val next_run_date: String
+)
 

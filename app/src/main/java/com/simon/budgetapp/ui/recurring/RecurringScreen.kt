@@ -30,6 +30,7 @@ fun RecurringScreen(
     viewModel: RecurringViewModel = viewModel()
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
+    var ruleToEdit by remember { mutableStateOf<RecurringRule?>(null) }
 
     LaunchedEffect(budgetId) {
         viewModel.loadRules(budgetId)
@@ -82,6 +83,14 @@ fun RecurringScreen(
                 }
             }
 
+            viewModel.errorMessage?.let {
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     viewModel.isLoading -> {
@@ -98,6 +107,7 @@ fun RecurringScreen(
                             items(viewModel.rules) { rule ->
                                 RecurringRuleCard(
                                     rule = rule,
+                                    onEditDate = { ruleToEdit = rule },
                                     onDeactivate = { viewModel.deactivateRule(rule.id, budgetId) {} }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -120,10 +130,20 @@ fun RecurringScreen(
             }
         )
     }
+
+    ruleToEdit?.let { rule ->
+        EditRuleDateDialog(
+            rule = rule,
+            onDismiss = { ruleToEdit = null },
+            onConfirm = { newDate ->
+                viewModel.updateRuleDate(rule, newDate, budgetId) { ruleToEdit = null }
+            }
+        )
+    }
 }
 
 @Composable
-fun RecurringRuleCard(rule: RecurringRule, onDeactivate: () -> Unit) {
+fun RecurringRuleCard(rule: RecurringRule, onEditDate: () -> Unit, onDeactivate: () -> Unit) {
     val isExpense = rule.type == "expense"
     val amountValue = rule.amount.toDoubleOrNull() ?: 0.0
 
@@ -146,6 +166,9 @@ fun RecurringRuleCard(rule: RecurringRule, onDeactivate: () -> Unit) {
                     color = if (isExpense) Color(0xFFC62828) else Color(0xFF2E7D32),
                     style = MaterialTheme.typography.titleMedium
                 )
+                TextButton(onClick = onEditDate) {
+                    Text("Modifier la date", style = MaterialTheme.typography.labelSmall)
+                }
                 TextButton(onClick = onDeactivate) {
                     Text("Désactiver", style = MaterialTheme.typography.labelSmall)
                 }
@@ -153,4 +176,3 @@ fun RecurringRuleCard(rule: RecurringRule, onDeactivate: () -> Unit) {
         }
     }
 }
-

@@ -170,4 +170,10 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("budgetId") budgetId: Int
     ): Response<GoalStatus>
+    @PUT("recurring-rules/{ruleId}")
+    suspend fun updateRecurringRuleDate(
+        @Header("Authorization") token: String,
+        @Path("ruleId") ruleId: Int,
+        @Body request: UpdateRecurringRuleDateRequest
+    ): Response<Map<String, String>>
 }

@@ -106,6 +106,32 @@ class RecurringViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
     }
+    fun updateRuleDate(rule: RecurringRule, newDate: String, budgetId: Int, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val token = sessionManager.tokenFlow.first() ?: return@launch
+                val response = api.updateRecurringRuleDate(
+                    "Bearer $token",
+                    rule.id,
+                    UpdateRecurringRuleDateRequest(newDate)
+                )
+                if (response.isSuccessful) {
+                    errorMessage = null
+                    loadRules(budgetId)
+                    onSuccess()
+                } else {
+                    errorMessage = when (response.code()) {
+                        400 -> "Date refusée (passée, après la fin ou routine inactive)"
+                        403 -> "Droits insuffisants"
+                        404 -> "Routine introuvable"
+                        else -> "Impossible de modifier la date"
+                    }
+                }
+            } catch (e: Exception) {
+                errorMessage = "Erreur réseau"
+            }
+        }
+    }
     private fun toMonthlyAmount(rule: RecurringRule): Double {
         val amount = rule.amount.toDoubleOrNull() ?: 0.0
         val interval = if (rule.interval_count > 0) rule.interval_count else 1
